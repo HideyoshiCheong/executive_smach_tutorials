@@ -12,17 +12,20 @@ from actionlib_msgs.msg import *
 # Create a trivial action server
 class TestServer:
     def __init__(self,name):
+        #self._sas = SimpleActionServer(name, msg_name, execute_cb=self.execute_cb)
         self._sas = SimpleActionServer(name,
                 TestAction,
                 execute_cb=self.execute_cb)
 
     def execute_cb(self, msg):
+        print("Callback with msg.goal = " + (str(msg.goal)))
         if msg.goal == 0:
             self._sas.set_succeeded()
         elif msg.goal == 1:
             self._sas.set_aborted()
         elif msg.goal == 2:
-            self._sas.set_preempted()
+            self._sas.set_succeeded()
+            #self._sas.set_preempted()
 
 def main():
     rospy.init_node('smach_example_actionlib')
@@ -65,13 +68,16 @@ def main():
         smach.StateMachine.add('GOAL_CB',
                                smach_ros.SimpleActionState('test_action', TestAction,
                                                        goal_cb = goal_callback),
-                               {'aborted':'succeeded'})
+                               {'succeeded':'succeeded',
+                               'aborted':'aborted',
+                               'preempted':'preempted'})
 
         # For more examples on how to set goals and process results, see 
         # executive_smach/smach_ros/tests/smach_actionlib.py
 
     # Execute SMACH plan
     outcome = sm0.execute()
+    print("Outcome: " + str(outcome))
 
     rospy.signal_shutdown('All done.')
 
